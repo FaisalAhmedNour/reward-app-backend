@@ -121,7 +121,7 @@ app.post('/api/earn', async (req, res) => {
     const totalEarning = earningPerAd * adsCount;
 
     const userRef = db.collection('users').doc(String(userId));
-    
+
     await userRef.update({
       balance: admin.firestore.FieldValue.increment(totalEarning),
       totalEarned: admin.firestore.FieldValue.increment(totalEarning),
@@ -138,10 +138,10 @@ app.post('/api/earn', async (req, res) => {
     });
 
     const updatedDoc = await userRef.get();
-    res.json({ 
-      success: true, 
+    res.json({
+      success: true,
       earned: totalEarning,
-      newBalance: updatedDoc.data().balance 
+      newBalance: updatedDoc.data().balance
     });
 
   } catch (error) {
@@ -165,8 +165,8 @@ app.post('/api/withdraw', async (req, res) => {
     const user = userDoc.data();
 
     if (user.balance < minWithdrawal) {
-      return res.status(400).json({ 
-        error: `Minimum withdrawal is $${minWithdrawal}. Your balance: $${user.balance.toFixed(4)}` 
+      return res.status(400).json({
+        error: `Minimum withdrawal is $${minWithdrawal}. Your balance: $${user.balance.toFixed(4)}`
       });
     }
 
@@ -185,10 +185,38 @@ app.post('/api/withdraw', async (req, res) => {
       balance: 0
     });
 
-    res.json({ 
-      success: true, 
-      message: 'Withdrawal request submitted! Processing within 24 hours.' 
+    res.json({
+      success: true,
+      message: 'Withdrawal request submitted! Processing within 24 hours.'
     });
+
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ========================
+// ✅ ADSGRAM REWARD CALLBACK (NEWLY ADDED)
+// ========================
+app.post('/api/reward', async (req, res) => {
+  try {
+    const { userId } = req.query;
+
+    if (!userId) {
+      return res.status(400).json({ error: 'No userId' });
+    }
+
+    const earningPerAd = 0.0015;
+
+    const userRef = db.collection('users').doc(String(userId));
+
+    await userRef.update({
+      balance: admin.firestore.FieldValue.increment(earningPerAd),
+      totalEarned: admin.firestore.FieldValue.increment(earningPerAd),
+      adsWatched: admin.firestore.FieldValue.increment(1)
+    });
+
+    res.json({ success: true });
 
   } catch (error) {
     res.status(500).json({ error: error.message });
