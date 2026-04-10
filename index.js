@@ -16,6 +16,11 @@ admin.initializeApp({
 });
 const db = admin.firestore();
 
+// Validate required env vars
+if (!process.env.FRONTEND_URL) {
+  throw new Error('FRONTEND_URL is not set in .env — required for the Telegram Mini App button');
+}
+
 // Initialize Bot
 const bot = new Telegraf(process.env.BOT_TOKEN);
 
